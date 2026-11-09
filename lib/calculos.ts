@@ -30,6 +30,14 @@ export function calcularRanking(items: ItemLista[]): TotalTienda[] {
   }).sort((a, b) => a.faltantes - b.faltantes || a.total - b.total)
 }
 
+// Precio más bajo de un producto entre todas las tiendas.
+export function precioMinimo(producto: Producto): number | null {
+  const disponibles = Object.values(producto.precios).filter(
+    (precio): precio is number => typeof precio === 'number',
+  )
+  return disponibles.length > 0 ? Math.min(...disponibles) : null
+}
+
 // ---------- Buscador ----------
 
 export function buscarProductos(consulta: string): Producto[] {

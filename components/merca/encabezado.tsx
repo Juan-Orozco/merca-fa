@@ -4,7 +4,7 @@ import { Info, ShoppingBasket } from 'lucide-react'
 export function Encabezado() {
   return (
     <header className="bg-primary text-primary-foreground">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 pb-4 pt-5">
+      <div className="mx-auto flex w-full max-w-2xl lg:max-w-6xl flex-col gap-3 px-4 pb-4 pt-5">
         <div className="flex items-center gap-3">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-foreground text-primary">
             <ShoppingBasket className="size-6" aria-hidden="true" />

@@ -19,6 +19,12 @@ export type Producto = {
   canastaFamiliar: boolean
   // Precio por tienda: el de la marca más barata disponible, o null si no lo vende.
   precios: Record<TiendaId, number | null>
+  // Marca usada para ese precio en cada tienda (null si no lo vende).
+  marcas: Record<TiendaId, string | null>
+}
+
+export type Categoria = {
+  nombre: string
 }
 
 type MarcaJson = { id_referencia: string; marca: string; precios: Record<string, number | null> }
@@ -45,12 +51,20 @@ export const TIENDAS: Tienda[] = datos.supermercados.map((id) => ({
   nombre: NOMBRES_TIENDAS[id] ?? id,
 }))
 
-// Toma el precio más bajo entre las marcas de cada tienda.
-function precioMasBajo(marcas: MarcaJson[], tiendaId: TiendaId): number | null {
-  const disponibles = marcas
-    .map((marca) => marca.precios[tiendaId])
-    .filter((precio): precio is number => typeof precio === 'number')
-  return disponibles.length > 0 ? Math.min(...disponibles) : null
+export const CATEGORIAS: Categoria[] = datos.categorias.map((categoria) => ({
+  nombre: categoria.nombre,
+}))
+
+// Busca la marca más barata de cada tienda.
+function marcaMasBarata(marcas: MarcaJson[], tiendaId: TiendaId) {
+  let mejor: { precio: number; marca: string } | null = null
+  for (const marca of marcas) {
+    const precio = marca.precios[tiendaId]
+    if (typeof precio === 'number' && (!mejor || precio < mejor.precio)) {
+      mejor = { precio, marca: marca.marca }
+    }
+  }
+  return mejor
 }
 
 export const PRODUCTOS: Producto[] = datos.categorias
@@ -62,7 +76,10 @@ export const PRODUCTOS: Producto[] = datos.categorias
       categoria: categoria.nombre,
       canastaFamiliar: CATEGORIAS_CANASTA_FAMILIAR.includes(categoria.nombre),
       precios: Object.fromEntries(
-        TIENDAS.map((tienda) => [tienda.id, precioMasBajo(producto.marcas, tienda.id)]),
+        TIENDAS.map((tienda) => [tienda.id, marcaMasBarata(producto.marcas, tienda.id)?.precio ?? null]),
+      ),
+      marcas: Object.fromEntries(
+        TIENDAS.map((tienda) => [tienda.id, marcaMasBarata(producto.marcas, tienda.id)?.marca ?? null]),
       ),
     })),
   )
