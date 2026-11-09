@@ -30,7 +30,9 @@ export function PestanaResultado({ ranking, hayProductos, cantidadProductos, onI
   }
 
   const [ganadora, ...demas] = ranking
-  const masCara = ranking[ranking.length - 1]
+  // El ahorro solo se compara contra tiendas que tienen todo el mercado.
+  const completas = ranking.filter((fila) => fila.faltantes === 0)
+  const masCara = completas[completas.length - 1] ?? ganadora
   const ahorro = masCara.total - ganadora.total
 
   return (
@@ -53,6 +55,12 @@ export function PestanaResultado({ ranking, hayProductos, cantidadProductos, onI
           <p className="mt-1 text-5xl font-extrabold tracking-tight text-primary">
             {formatearPesos(ganadora.total)}
           </p>
+          {ganadora.faltantes > 0 && (
+            <p className="mt-2 rounded-xl bg-destructive/10 p-3 font-bold text-destructive">
+              Ninguna tienda tiene todo tu mercado. Aquí no encuentras {ganadora.faltantes}{' '}
+              {ganadora.faltantes === 1 ? 'producto' : 'productos'}.
+            </p>
+          )}
         </div>
         <p className="flex items-center gap-3 rounded-2xl bg-secondary p-4 text-lg font-bold text-secondary-foreground">
           <PiggyBank className="size-8 shrink-0" aria-hidden="true" />
@@ -60,6 +68,10 @@ export function PestanaResultado({ ranking, hayProductos, cantidadProductos, onI
             <span>
               Ahorras {formatearPesos(ahorro)} frente a {masCara.tienda.nombre}
             </span>
+          ) : completas.length === 0 ? (
+            <span>Revisa tu lista: algunos productos no están en ninguna tienda completa</span>
+          ) : completas.length === 1 ? (
+            <span>Es la única tienda que tiene todo tu mercado</span>
           ) : (
             <span>Tu mercado cuesta lo mismo en todas las tiendas</span>
           )}
@@ -82,14 +94,18 @@ export function PestanaResultado({ ranking, hayProductos, cantidadProductos, onI
                 </span>
                 <div>
                   <p className="text-lg font-extrabold leading-tight">{fila.tienda.nombre}</p>
-                  <p className="text-muted-foreground">
-                    {fila.total > ganadora.total
-                      ? `${formatearPesos(fila.total - ganadora.total)} más`
-                      : 'Mismo precio'}
+                  <p className={fila.faltantes > 0 ? 'font-bold text-destructive' : 'text-muted-foreground'}>
+                    {fila.faltantes > 0
+                      ? `No tiene ${fila.faltantes} de tus productos`
+                      : fila.total > ganadora.total
+                        ? `${formatearPesos(fila.total - ganadora.total)} más`
+                        : 'Mismo precio'}
                   </p>
                 </div>
               </div>
-              <p className="text-xl font-extrabold">{formatearPesos(fila.total)}</p>
+              <p className="text-xl font-extrabold">
+                {fila.faltantes > 0 && fila.total === 0 ? '—' : formatearPesos(fila.total)}
+              </p>
             </li>
           ))}
         </ol>

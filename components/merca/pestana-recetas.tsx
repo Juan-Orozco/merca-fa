@@ -82,7 +82,9 @@ export function PestanaRecetas({
                         <p className="text-lg font-bold leading-tight">{ingrediente.nombre}</p>
                         {falta && (
                           <p className="text-muted-foreground">
-                            {formatearPesos(ingrediente.precios[tiendaMasBarata.id])} en {tiendaMasBarata.nombre}
+                            {ingrediente.precios[tiendaMasBarata.id] != null
+                              ? `${formatearPesos(ingrediente.precios[tiendaMasBarata.id] as number)} en ${tiendaMasBarata.nombre}`
+                              : `No disponible en ${tiendaMasBarata.nombre}`}
                           </p>
                         )}
                       </div>
