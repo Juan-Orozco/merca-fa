@@ -10,19 +10,32 @@ export type ItemLista = {
 export type TotalTienda = {
   tienda: Tienda
   total: number
+  // Cuántos productos de la lista no vende esta tienda.
+  faltantes: number
 }
 
 // ---------- Totales por tienda ----------
 
-// Suma el mercado completo en cada tienda y las ordena de la más barata a la más cara.
+// Suma el mercado en cada tienda. Primero van las que tienen todo, de la más barata a la más cara.
 export function calcularRanking(items: ItemLista[]): TotalTienda[] {
-  return TIENDAS.map((tienda) => ({
-    tienda,
-    total: items.reduce((suma, item) => {
-      const producto = PRODUCTOS_POR_ID[item.productoId]
-      return producto ? suma + producto.precios[tienda.id] * item.cantidad : suma
-    }, 0),
-  })).sort((a, b) => a.total - b.total)
+  return TIENDAS.map((tienda) => {
+    let total = 0
+    let faltantes = 0
+    for (const item of items) {
+      const precio = PRODUCTOS_POR_ID[item.productoId]?.precios[tienda.id]
+      if (typeof precio === 'number') total += precio * item.cantidad
+      else faltantes += 1
+    }
+    return { tienda, total, faltantes }
+  }).sort((a, b) => a.faltantes - b.faltantes || a.total - b.total)
+}
+
+// Precio más bajo de un producto entre todas las tiendas.
+export function precioMinimo(producto: Producto): number | null {
+  const disponibles = Object.values(producto.precios).filter(
+    (precio): precio is number => typeof precio === 'number',
+  )
+  return disponibles.length > 0 ? Math.min(...disponibles) : null
 }
 
 // ---------- Buscador ----------

@@ -1,6 +1,8 @@
 import { Minus, Plus, Trash2 } from 'lucide-react'
-import { PRODUCTOS_POR_ID } from '@/data/productos'
-import type { ItemLista } from '@/lib/calculos'
+import { PRODUCTOS_POR_ID, TIENDAS } from '@/data/productos'
+import { precioMinimo, type ItemLista } from '@/lib/calculos'
+import { formatearPesos } from '@/lib/formato'
+import { cn } from '@/lib/utils'
 import { EtiquetaCanasta } from './etiqueta-canasta'
 
 type Props = {
@@ -9,10 +11,13 @@ type Props = {
   onQuitar: (productoId: string) => void
 }
 
-// Un producto de la lista con su unidad, cantidad (+ / −) y botón para quitarlo.
+// Un producto de la lista: unidad, cantidad (+ / −), botón para quitarlo
+// y su precio en cada tienda (precio × cantidad), con el más barato en verde.
 export function ItemMercado({ item, onCambiarCantidad, onQuitar }: Props) {
   const producto = PRODUCTOS_POR_ID[item.productoId]
   if (!producto) return null
+
+  const masBarato = precioMinimo(producto)
 
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -58,6 +63,37 @@ export function ItemMercado({ item, onCambiarCantidad, onQuitar }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Precio en cada tienda */}
+      <ul className="grid grid-cols-3 gap-2" aria-label={`Precio de ${producto.nombre} por tienda`}>
+        {TIENDAS.map((tienda) => {
+          const precio = producto.precios[tienda.id]
+          const disponible = typeof precio === 'number'
+          const esMasBarato = disponible && precio === masBarato
+          return (
+            <li
+              key={tienda.id}
+              className={cn(
+                'flex flex-col rounded-xl border px-2 py-2 text-center',
+                esMasBarato
+                  ? 'border-primary bg-secondary text-secondary-foreground'
+                  : 'border-border bg-background',
+              )}
+            >
+              <span className="text-sm font-bold">{tienda.nombre}</span>
+              {disponible ? (
+                <>
+                  <span className="text-base font-extrabold">{formatearPesos(precio * item.cantidad)}</span>
+                  <span className="truncate text-xs text-muted-foreground">{producto.marcas[tienda.id]}</span>
+                  {esMasBarato && <span className="sr-only">(el más barato)</span>}
+                </>
+              ) : (
+                <span className="text-sm font-semibold text-muted-foreground">No disponible</span>
+              )}
+            </li>
+          )
+        })}
+      </ul>
     </li>
   )
 }

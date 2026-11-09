@@ -21,9 +21,9 @@ export function NavegacionPestanas({ pestanaActiva, onCambiar, cantidadProductos
   return (
     <nav
       aria-label="Secciones"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:sticky md:top-0 md:bottom-auto md:border-b md:border-t-0"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:sticky lg:top-0 lg:bottom-auto lg:border-b lg:border-t-0"
     >
-      <ul className="mx-auto grid w-full max-w-2xl grid-cols-3">
+      <ul className="mx-auto grid w-full max-w-2xl grid-cols-3 lg:max-w-6xl">
         {pestanas.map(({ id, etiqueta, icono: Icono, contador }) => {
           const activa = pestanaActiva === id
           return (

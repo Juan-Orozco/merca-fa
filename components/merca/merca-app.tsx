@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { calcularRanking, sugerirRecetas, type ItemLista } from '@/lib/calculos'
 import { Encabezado } from './encabezado'
 import { NavegacionPestanas, type Pestana } from './navegacion-pestanas'
@@ -8,12 +8,15 @@ import { EstadoPresupuesto } from './estado-presupuesto'
 import { PestanaMercado } from './pestana-mercado'
 import { PestanaResultado } from './pestana-resultado'
 import { PestanaRecetas } from './pestana-recetas'
+import { ListaMercado } from './lista-mercado'
+import { PanelCarrito } from './panel-carrito'
 
 // Componente principal: guarda la lista y el presupuesto, y recalcula todo al instante.
 export function MercaApp() {
   const [pestana, setPestana] = useState<Pestana>('mercado')
   const [items, setItems] = useState<ItemLista[]>([])
   const [presupuesto, setPresupuesto] = useState<number | null>(null)
+  const [panelAbierto, setPanelAbierto] = useState(false)
   // Ingredientes que el usuario agregó desde una receta (para mostrar el botón "−").
   const [agregadosDesdeReceta, setAgregadosDesdeReceta] = useState<Set<string>>(new Set())
 
@@ -56,8 +59,29 @@ export function MercaApp() {
 
   const hayProductos = items.length > 0
 
+  const cerrarPanel = useCallback(() => setPanelAbierto(false), [])
+
+  // La misma lista se muestra en la columna derecha y en el panel del carrito.
+  function renderLista(idCampo: string) {
+    return (
+      <ListaMercado
+        idCampo={idCampo}
+        items={items}
+        ranking={ranking}
+        presupuesto={presupuesto}
+        onPresupuesto={setPresupuesto}
+        onCambiarCantidad={cambiarCantidad}
+        onQuitar={quitarProducto}
+        onVerResultado={() => {
+          setPestana('resultado')
+          setPanelAbierto(false)
+        }}
+      />
+    )
+  }
+
   return (
-    <div className="min-h-dvh pb-28 md:pb-10">
+    <div className="min-h-dvh pb-44 lg:pb-10">
       <Encabezado />
       <NavegacionPestanas
         pestanaActiva={pestana}
@@ -66,7 +90,8 @@ export function MercaApp() {
         cantidadRecetas={recetas.length}
       />
 
-      <main className="mx-auto w-full max-w-2xl px-4 pt-5">
+      <div className="mx-auto w-full max-w-2xl px-4 pt-5 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start lg:gap-8">
+      <main className="min-w-0">
         {pestana !== 'recetas' && (
           <EstadoPresupuesto
             hayProductos={hayProductos}
@@ -78,14 +103,10 @@ export function MercaApp() {
 
         {pestana === 'mercado' && (
           <PestanaMercado
-            items={items}
             idsEnLista={idsEnLista}
             presupuesto={presupuesto}
             onPresupuesto={setPresupuesto}
             onAgregar={agregarProducto}
-            onCambiarCantidad={cambiarCantidad}
-            onQuitar={quitarProducto}
-            onVerResultado={() => setPestana('resultado')}
           />
         )}
 
@@ -110,6 +131,22 @@ export function MercaApp() {
           />
         )}
       </main>
+
+        {/* Computador: la lista siempre visible a la derecha */}
+        <aside aria-label="Mi lista" className="hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:rounded-3xl lg:bg-muted lg:p-4">
+          {renderLista('presupuesto-lateral')}
+        </aside>
+      </div>
+
+      {/* Celular: botón del carrito y panel con la lista */}
+      <PanelCarrito
+        abierto={panelAbierto}
+        onAbrir={() => setPanelAbierto(true)}
+        onCerrar={cerrarPanel}
+        cantidadProductos={items.length}
+      >
+        {renderLista('presupuesto-panel')}
+      </PanelCarrito>
     </div>
   )
 }
